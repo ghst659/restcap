@@ -10,14 +10,14 @@ import java.util.List;
  */
 @Path("inbox")
 public class CaptureHandler {
-    public final static String name = "inbox";
+    private static final String name = "inbox";
     private static final MessageStore sink = MessageStoreFactory.newStore("restcap");
-
+    private static final StatStore stats = StatStore.getInstance();
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getTags() {
         List<String> result = new LinkedList<>(sink.getTags());
-        // System.err.format("getTags(): %s\n", result);
+        stats.inc("GET:inbox");
     	return result;
     }
 
@@ -26,7 +26,7 @@ public class CaptureHandler {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Message> getMessages(@PathParam("tag") String tag) {
         List<Message> result = sink.getMessages(tag);
-        //System.err.format("getMessages(%s): %s\n", tag, result);
+        stats.inc("GET:inbox/" + tag);
         return result;
     }
 
@@ -62,7 +62,7 @@ public class CaptureHandler {
         sink.putMessage(tag, postData);
         result.addStamp(stamp);
         result.setData(String.format("%s: %d", tag, sink.messageCount(tag)));
-        // System.err.format("postMessage(%s): %s\n", tag, postData);
+        stats.inc("POST:message/" + tag);
         return result;
     }
     
@@ -78,7 +78,7 @@ public class CaptureHandler {
         sink.putMessage(tag, putData);
         result.addStamp(stamp);
         result.setData(String.format("%s: %d", tag, sink.messageCount(tag)));
-        // System.err.format("putMessage(%s): %s\n", tag, putData);
+        stats.inc("PUT:message/" + tag);
         return result;
     }
 }
